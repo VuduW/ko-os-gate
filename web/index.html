@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KO-OS Gate Constellation</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="layout">
+      <section class="panel hero">
+        <p class="eyebrow">KO-OS constitutional game surface</p>
+        <h1>Gate Constellation</h1>
+        <p>Pick a scenario, inspect the nodes, and see how capability, policy, authority, time, subject, constraints, and evidence combine into a gate decision.</p>
+        <div id="scenario-buttons" class="scenario-buttons"></div>
+      </section>
+      <section class="panel network-panel">
+        <div class="network">
+          <div class="orbit orbit-top"></div>
+          <div class="orbit orbit-bottom"></div>
+          <button class="node" data-node="C">C</button>
+          <button class="node" data-node="P">P</button>
+          <button class="node" data-node="A">A</button>
+          <button class="node" data-node="T">T</button>
+          <button class="node" data-node="S">S</button>
+          <button class="node" data-node="R">R</button>
+          <button class="node" data-node="E">E</button>
+          <button class="node gate-node active" data-node="G">G</button>
+        </div>
+        <div class="legend">
+          <span><strong>G</strong> = C ∧ P ∧ A ∧ T ∧ S ∧ R ∧ E</span>
+          <span id="gate-result" class="result-pill">DENY</span>
+        </div>
+      </section>
+      <section class="panel details-panel">
+        <h2 id="detail-title">Scenario details</h2>
+        <div id="detail-body" class="detail-body"></div>
+      </section>
+      <section class="panel pack-panel">
+        <h2>Pack roles</h2>
+        <div id="pack-grid" class="pack-grid"></div>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
