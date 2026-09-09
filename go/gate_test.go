@@ -38,7 +38,7 @@ func actor(authority []AuthorityLease) Actor {
 }
 
 func request() GateRequest {
-	return GateRequest{Subject: "wolf-1", Capability: "deploy", Scope: "deploy", PolicySatisfied: true, ConflictMode: Deny}
+	return GateRequest{Subject: "wolf-1", Capability: "deploy", Scope: "deploy", PolicySatisfied: true, PolicySpecified: true, ConflictMode: Deny}
 }
 
 func TestGateContractMatrix(t *testing.T) {
@@ -127,5 +127,57 @@ func TestDecisionRuntimeSeparationAndLedger(t *testing.T) {
 func TestPackCharacters(t *testing.T) {
 	if len(PackCharacters) != 13 || PackCharacters[0].Name != "QUILL" || PackCharacters[12].Name != "NYX" {
 		t.Fatalf("expected full pack roster: %+v", PackCharacters)
+	}
+}
+
+func TestGateRequestDefaults(t *testing.T) {
+	gate := Gate{}
+	defaultRequest := GateRequest{
+		Subject:    "wolf-1",
+		Capability: "deploy",
+		Scope:      "deploy",
+		RequiredConstraints: map[string]string{
+			"risk": "low",
+		},
+	}
+	decision := gate.Evaluate(
+		actor([]AuthorityLease{lease("wolf-1", time.Hour)}),
+		defaultRequest,
+		[]EvidenceResult{evidence("wolf-1", true, Verified, time.Hour)},
+		now,
+	)
+	if decision.Decision != Allow || !decision.Predicates["P"] {
+		t.Fatalf("expected omitted policy to default to allow-compatible: %+v", decision)
+	}
+
+	explicitPolicyDeny := defaultRequest
+	explicitPolicyDeny.PolicySpecified = true
+	explicitPolicyDeny.PolicySatisfied = false
+	decision = gate.Evaluate(
+		actor([]AuthorityLease{lease("wolf-1", time.Hour)}),
+		explicitPolicyDeny,
+		[]EvidenceResult{evidence("wolf-1", true, Verified, time.Hour)},
+		now,
+	)
+	if decision.Decision != Deny || decision.Predicates["P"] {
+		t.Fatalf("expected explicit policy failure to deny: %+v", decision)
+	}
+
+	conflictRequest := GateRequest{
+		Subject:    "wolf-1",
+		Capability: "deploy",
+		Scope:      "deploy",
+	}
+	decision = gate.Evaluate(
+		actor([]AuthorityLease{lease("wolf-1", time.Hour)}),
+		conflictRequest,
+		[]EvidenceResult{
+			evidence("wolf-1", true, Verified, time.Hour),
+			evidence("wolf-1", false, Contradicted, time.Hour),
+		},
+		now,
+	)
+	if decision.Decision != Deny {
+		t.Fatalf("expected omitted conflict mode to default to deny: %+v", decision)
 	}
 }
