@@ -85,6 +85,7 @@ type GateRequest struct {
 	Scope               string
 	RequiredConstraints map[string]string
 	PolicySatisfied     bool
+	PolicySpecified     bool
 	ConflictMode        GateResult
 }
 
@@ -144,6 +145,20 @@ func (l *Ledger) Append(entryType string, payload map[string]string, recordedAt 
 
 type Gate struct{}
 
+func (r GateRequest) policySatisfied() bool {
+	if !r.PolicySpecified {
+		return true
+	}
+	return r.PolicySatisfied
+}
+
+func (r GateRequest) conflictMode() GateResult {
+	if r.ConflictMode == "" {
+		return Deny
+	}
+	return r.ConflictMode
+}
+
 func (Gate) Evaluate(actor Actor, request GateRequest, evidence []EvidenceResult, at time.Time) GateDecision {
 	matching := []AuthorityLease{}
 	active := []AuthorityLease{}
@@ -156,7 +171,7 @@ func (Gate) Evaluate(actor Actor, request GateRequest, evidence []EvidenceResult
 		}
 	}
 	capabilitySatisfied := actor.Capabilities[request.Capability]
-	policySatisfied := request.PolicySatisfied
+	policySatisfied := request.policySatisfied()
 	authorityValid := len(active) > 0
 	subjectValid := actor.ID == request.Subject
 	temporalValid := len(evidence) > 0 && len(active) > 0
@@ -212,7 +227,7 @@ func (Gate) Evaluate(actor Actor, request GateRequest, evidence []EvidenceResult
 	}
 	decision := Deny
 	if evidenceConflict {
-		decision = request.ConflictMode
+		decision = request.conflictMode()
 	} else if capabilitySatisfied && policySatisfied && authorityValid && temporalValid && subjectValid && constraintsSatisfied && evidenceValid {
 		decision = Allow
 	}
